@@ -1,474 +1,143 @@
 <!DOCTYPE html>
-<html lang="ru">
+<html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>La Berto's HTML editor</title>
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.2/codemirror.min.css">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.2/theme/dracula.min.css">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <title>LaBerto HTML Editor</title>
     <style>
-        * {
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
             margin: 0;
             padding: 0;
-            box-sizing: border-box;
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-        }
-        
-        body {
-            background-color: #f5f5f5;
-            color: #333;
-        }
-        
-        .container {
             display: flex;
             flex-direction: column;
             height: 100vh;
-            padding: 10px;
         }
-        
         .header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            padding: 10px;
             background-color: #2c3e50;
             color: white;
-            border-radius: 5px 5px 0 0;
+            padding: 10px 20px;
+            text-align: center;
         }
-        
-        .logo {
-            font-size: 1.5rem;
-            font-weight: bold;
-        }
-        
-        .controls {
+        .container {
             display: flex;
-            gap: 10px;
+            flex: 1;
         }
-        
+        .editor-pane, .preview-pane {
+            flex: 1;
+            padding: 10px;
+            box-sizing: border-box;
+        }
+        .editor-pane {
+            background-color: #f5f5f5;
+            border-right: 1px solid #ddd;
+        }
+        .preview-pane {
+            background-color: white;
+            overflow: auto;
+        }
+        textarea {
+            width: 100%;
+            height: calc(100% - 40px);
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            padding: 10px;
+            font-family: 'Consolas', monospace;
+            resize: none;
+        }
+        .button-bar {
+            padding: 10px;
+            background-color: #ecf0f1;
+            display: flex;
+            justify-content: space-between;
+        }
         button {
             padding: 8px 15px;
+            background-color: #3498db;
+            color: white;
             border: none;
             border-radius: 4px;
             cursor: pointer;
-            font-weight: bold;
+        }
+        button:hover {
+            background-color: #2980b9;
+        }
+        label {
             display: flex;
             align-items: center;
             gap: 5px;
-            transition: all 0.2s;
         }
-        
-        button:hover {
-            opacity: 0.9;
-            transform: translateY(-1px);
-        }
-        
-        .run-btn {
-            background-color: #27ae60;
-            color: white;
-        }
-        
-        .save-btn {
-            background-color: #3498db;
-            color: white;
-        }
-        
-        .clear-btn {
-            background-color: #e74c3c;
-            color: white;
-        }
-        
-        .download-btn {
-            background-color: #9b59b6;
-            color: white;
-        }
-        
-        .editor-container {
-            display: flex;
-            flex: 1;
-            gap: 10px;
-            margin-top: 10px;
-        }
-        
-        .editor-panel, .preview-panel {
-            flex: 1;
-            display: flex;
-            flex-direction: column;
-            border-radius: 5px;
-            overflow: hidden;
-            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
-        }
-        
-        .panel-header {
-            padding: 8px 15px;
-            background-color: #34495e;
-            color: white;
-            font-weight: bold;
-        }
-        
-        .CodeMirror {
-            height: 100% !important;
-            font-size: 14px;
-        }
-        
-        .preview-frame {
-            flex: 1;
-            border: none;
-            background-color: white;
-        }
-        
-        .footer {
-            margin-top: 10px;
-            padding: 10px;
-            text-align: center;
-            background-color: #ecf0f1;
-            border-radius: 0 0 5px 5px;
-            font-size: 0.9rem;
-        }
-        
-        .tabs {
-            display: flex;
-            background-color: #34495e;
-        }
-        
-        .tab {
-            padding: 8px 15px;
-            cursor: pointer;
-            color: #bdc3c7;
-            border-right: 1px solid #2c3e50;
-        }
-        
-        .tab.active {
-            background-color: #2c3e50;
-            color: white;
-        }
-        
-        .tab-content {
-            display: none;
-            height: 100%;
-        }
-        
-        .tab-content.active {
-            display: block;
-        }
-        
-        @media (max-width: 768px) {
-            .editor-container {
-                flex-direction: column;
-            }
-            
-            .controls {
-                flex-wrap: wrap;
-                justify-content: center;
-            }
+        h2 {
+            margin-top: 0;
+            color: #2c3e50;
         }
     </style>
 </head>
 <body>
-    <div class="container">
-        <div class="header">
-            <div class="logo">
-                <i class="fas fa-code"></i> La Berto's HTML editor
-            </div>
-            <div class="controls">
-                <button class="run-btn" id="runBtn">
-                    <i class="fas fa-play"></i> Запустить
-                </button>
-                <button class="save-btn" id="saveBtn">
-                    <i class="fas fa-save"></i> Сохранить
-                </button>
-                <button class="download-btn" id="downloadBtn">
-                    <i class="fas fa-download"></i> Скачать
-                </button>
-                <button class="clear-btn" id="clearBtn">
-                    <i class="fas fa-trash"></i> Очистить
-                </button>
-            </div>
-        </div>
-        
-        <div class="editor-container">
-            <div class="editor-panel">
-                <div class="tabs">
-                    <div class="tab active" data-tab="html">HTML</div>
-                    <div class="tab" data-tab="css">CSS</div>
-                    <div class="tab" data-tab="js">JavaScript</div>
-                </div>
-                <div class="panel-header">
-                    <i class="fas fa-edit"></i> Редактор кода
-                </div>
-                <div class="tab-content active" id="html-editor">
-                    <textarea id="htmlCode">&lt;!DOCTYPE html&gt;
-&lt;html lang="ru"&gt;
-&lt;head&gt;
-    &lt;meta charset="UTF-8"&gt;
-    &lt;meta name="viewport" content="width=device-width, initial-scale=1.0"&gt;
-    &lt;title&gt;Моя страница&lt;/title&gt;
-    &lt;style&gt;
-        body {
-            font-family: Arial, sans-serif;
-            line-height: 1.6;
-            margin: 0;
-            padding: 20px;
-            background-color: #f4f4f4;
-        }
-        .container {
-            max-width: 800px;
-            margin: 0 auto;
-            background: #fff;
-            padding: 20px;
-            border-radius: 5px;
-            box-shadow: 0 0 10px rgba(0,0,0,0.1);
-        }
-        h1 {
-            color: #333;
-        }
-        p {
-            margin-bottom: 15px;
-        }
-    &lt;/style&gt;
-&lt;/head&gt;
-&lt;body&gt;
-    &lt;div class="container"&gt;
-        &lt;h1&gt;Добро пожаловать!&lt;/h1&gt;
-        &lt;p&gt;Это пример HTML страницы. Вы можете редактировать этот код и сразу видеть результат.&lt;/p&gt;
-        &lt;button id="demoBtn"&gt;Нажми меня&lt;/button&gt;
-        &lt;div id="output"&gt;&lt;/div&gt;
-    &lt;/div&gt;
+    <div class="header">
+        <h1>LaBerto HTML Editor</h1>
+    </div>
     
-    &lt;script&gt;
-        document.getElementById('demoBtn').addEventListener('click', function() {
-            document.getElementById('output').innerHTML = 'Кнопка была нажата! ' + new Date().toLocaleTimeString();
-        });
-    &lt;/script&gt;
-&lt;/body&gt;
-&lt;/html&gt;</textarea>
-                </div>
-                <div class="tab-content" id="css-editor">
-                    <textarea id="cssCode">/* Здесь вы можете писать CSS код */
-body {
-    background-color: #f4f4f4;
-    color: #333;
-}
-
-.container {
-    max-width: 800px;
-    margin: 0 auto;
-    padding: 20px;
-    background: white;
-    border-radius: 8px;
-    box-shadow: 0 2px 10px rgba(0,0,0,0.1);
-}
-
-button {
-    padding: 10px 15px;
-    background-color: #3498db;
-    color: white;
-    border: none;
-    border-radius: 4px;
-    cursor: pointer;
-    transition: background-color 0.3s;
-}
-
-button:hover {
-    background-color: #2980b9;
-}</textarea>
-                </div>
-                <div class="tab-content" id="js-editor">
-                    <textarea id="jsCode">// Здесь вы можете писать JavaScript код
-console.log("Привет, мир!");
-
-// Пример обработчика событий
-document.addEventListener('DOMContentLoaded', function() {
-    // Код, который выполнится после загрузки DOM
-    const demoBtn = document.getElementById('demoBtn');
-    if (demoBtn) {
-        demoBtn.addEventListener('click', function() {
-            alert('Кнопка была нажата!');
-        });
-    }
-});
-
-// Вы можете добавлять свои функции здесь
-function showTime() {
-    const now = new Date();
-    return now.toLocaleTimeString();
-}</textarea>
-                </div>
-            </div>
-            
-            <div class="preview-panel">
-                <div class="panel-header">
-                    <i class="fas fa-eye"></i> Предпросмотр
-                </div>
-                <iframe class="preview-frame" id="previewFrame"></iframe>
-            </div>
+    <div class="button-bar">
+        <div>
+            <button id="run-btn">Run</button>
+            <button id="clear-btn">Clear</button>
         </div>
-        
-        <div class="footer">
-            <p>Онлайн HTML редактор с поддержкой HTML, CSS и JavaScript | Сохранение работает через localStorage</p>
+        <label>
+            <input type="checkbox" id="auto-run"> Auto-run
+        </label>
+    </div>
+    
+    <div class="container">
+        <div class="editor-pane">
+            <h2>Editor</h2>
+            <textarea id="html-editor" placeholder="Write your HTML here..."><!DOCTYPE html>
+<html>
+<head>
+    <title>My Page</title>
+</head>
+<body>
+    <h1>Hello, LaBerto!</h1>
+    <p>This is a simple HTML editor.</p>
+</body>
+</html></textarea>
+        </div>
+        <div class="preview-pane">
+            <h2>Preview</h2>
+            <iframe id="preview-frame" style="width: 100%; height: calc(100% - 40px); border: 1px solid #ddd; background: white;"></iframe>
         </div>
     </div>
 
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.2/codemirror.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.2/mode/xml/xml.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.2/mode/css/css.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.2/mode/javascript/javascript.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.2/mode/htmlmixed/htmlmixed.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.2/addon/edit/closetag.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.2/addon/edit/closebrackets.min.js"></script>
-    
     <script>
-        // Инициализация редакторов CodeMirror
-        const htmlEditor = CodeMirror.fromTextArea(document.getElementById('htmlCode'), {
-            mode: 'htmlmixed',
-            theme: 'dracula',
-            lineNumbers: true,
-            autoCloseTags: true,
-            autoCloseBrackets: true,
-            indentUnit: 4
-        });
+        const editor = document.getElementById('html-editor');
+        const previewFrame = document.getElementById('preview-frame');
+        const runBtn = document.getElementById('run-btn');
+        const clearBtn = document.getElementById('clear-btn');
+        const autoRunCheckbox = document.getElementById('auto-run');
         
-        const cssEditor = CodeMirror.fromTextArea(document.getElementById('cssCode'), {
-            mode: 'css',
-            theme: 'dracula',
-            lineNumbers: true,
-            autoCloseBrackets: true,
-            indentUnit: 4
-        });
-        
-        const jsEditor = CodeMirror.fromTextArea(document.getElementById('jsCode'), {
-            mode: 'javascript',
-            theme: 'dracula',
-            lineNumbers: true,
-            autoCloseBrackets: true,
-            indentUnit: 4
-        });
-        
-        // Переключение между вкладками
-        const tabs = document.querySelectorAll('.tab');
-        tabs.forEach(tab => {
-            tab.addEventListener('click', () => {
-                // Удаляем активный класс у всех вкладок и контента
-                tabs.forEach(t => t.classList.remove('active'));
-                document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
-                
-                // Добавляем активный класс к выбранной вкладке и соответствующему контенту
-                tab.classList.add('active');
-                const tabId = tab.getAttribute('data-tab');
-                document.getElementById(${tabId}-editor).classList.add('active');
-            });
-        });
-        
-        // Функция запуска предпросмотра
-        function runCode() {
-            const html = htmlEditor.getValue();
-            const css = cssEditor.getValue();
-            const js = jsEditor.getValue();
-            
-            const previewFrame = document.getElementById('previewFrame');
-            const preview = previewFrame.contentDocument || previewFrame.contentWindow.document;
-            
-            preview.open();
-            preview.write(`
-                <!DOCTYPE html>
-                <html>
-                <head>
-                    <style>${css}</style>
-                </head>
-                <body>
-                    ${html}
-                    <script>${js}<\/script>
-                </body>
-                </html>
-            `);
-            preview.close();
+        function updatePreview() {
+            const html = editor.value;
+            const previewDoc = previewFrame.contentDocument || previewFrame.contentWindow.document;
+            previewDoc.open();
+            previewDoc.write(html);
+            previewDoc.close();
         }
         
-        // Функция сохранения в localStorage
-        function saveCode() {
-            const codeData = {
-                html: htmlEditor.getValue(),
-                css: cssEditor.getValue(),
-                js: jsEditor.getValue(),
-                timestamp: new Date().getTime()
-            };
-            
-            localStorage.setItem('savedCode', JSON.stringify(codeData));
-            alert('Код успешно сохранён!');
-        }
+        runBtn.addEventListener('click', updatePreview);
         
-        // Функция загрузки из localStorage
-        function loadCode() {
-            const savedCode = localStorage.getItem('savedCode');
-            if (savedCode) {
-                const codeData = JSON.parse(savedCode);
-                htmlEditor.setValue(codeData.html);
-                cssEditor.setValue(codeData.css);
-                jsEditor.setValue(codeData.js);
-                runCode();
-                alert('Код успешно загружен!');
-            } else {
-                alert('Сохранённый код не найден.');
+        clearBtn.addEventListener('click', () => {
+            editor.value = '';
+            updatePreview();
+        });
+        
+        editor.addEventListener('input', () => {
+            if (autoRunCheckbox.checked) {
+                updatePreview();
             }
-        }
-        
-        // Функция очистки редакторов
-        function clearEditors() {
-            if (confirm('Вы уверены, что хотите очистить все редакторы?')) {
-                htmlEditor.setValue('');
-                cssEditor.setValue('');
-                jsEditor.setValue('');
-            }
-        }
-        
-        // Функция скачивания кода
-        function downloadCode() {
-            const html = htmlEditor.getValue();
-            const css = cssEditor.getValue();
-            const js = jsEditor.getValue();
-            
-            const fullCode = `<!DOCTYPE html>
-<html>
-<head>
-    <style>${css}</style>
-</head>
-<body>
-    ${html}
-    <script>${js}<\/script>
-</body>
-</html>`;
-            
-            const blob = new Blob([fullCode], { type: 'text/html' });
-            const url = URL.createObjectURL(blob);
-            const a = document.createElement('a');
-            a.href = url;
-            a.download = 'my-page.html';
-            document.body.appendChild(a);
-            a.click();
-            document.body.removeChild(a);
-            URL.revokeObjectURL(url);
-        }
-        
-        // Обработчики событий для кнопок
-        document.getElementById('runBtn').addEventListener('click', runCode);
-        document.getElementById('saveBtn').addEventListener('click', saveCode);
-        document.getElementById('clearBtn').addEventListener('click', clearEditors);
-        document.getElementById('downloadBtn').addEventListener('click', downloadCode);
-        
-        // Запуск предпросмотра при загрузке страницы
-        window.addEventListener('load', () => {
-            // Попытка загрузить сохранённый код
-            const savedCode = localStorage.getItem('savedCode');
-            if (savedCode) {
-                const codeData = JSON.parse(savedCode);
-                htmlEditor.setValue(codeData.html);
-                cssEditor.setValue(codeData.css);
-                jsEditor.setValue(codeData.js);
-            }
-            
-            runCode();
         });
+        
+        // Initial preview
+        updatePreview();
     </script>
 </body>
 </html>
